@@ -1,78 +1,30 @@
-#reading original data source
+## reading file
+householdpower<-read.table("householdpower.txt",sep = ";")
 
-originalData<-read.table("householdpower.txt")
+##filtering dates
+maindata<-dplyr::filter(householdpower,V1=="1/2/2007"|V1=="2/2/2007")
 
-#################creating a new data set#####################
+##creating datetime format
+maindata$datetime<-strptime(paste(maindata$V1,maindata$V2),"%d/%m/%Y %H:%M:%S")
 
-#splitting the origibalData
-o1<-strsplit(as.character(originalData$V1),"\\;")
-
-##creating date
-date<-c()
-for(i in 1:length(ol)){
-  date[i]<-ol[[i]][1]
-}
-date1<-sub("/","0",date)
-date2<-sub("/","",date1)
-date3<-paste("0",date2)
-maindate<-ymd(date3)
+##converting data into numeric
+maindata$globalactivepower<-as.numeric(as.character(maindata$V3))
+maindata$globalreactive<-as.numeric(as.character(maindata$V4))
+maindata$voltage<-as.numeric(as.character(maindata$V5))
+maindata$submetering1<-as.numeric(as.character(maindata$V7))
+maindata$submetering2<-as.numeric(as.character(maindata$V8))
+maindata$submetering3<-as.numeric(as.character(maindata$V9))
 
 
 
-##creating global active power
-globalactivepower<-c()
-for(i in 1:length(ol)){
-  globalactivepower[i]<-ol[[i]][3]
-}
+##plotting
 
-##creating time
-time<-c()
-for(i in 1:length(ol)){
-  time[i]<-ol[[i]][2]
-}
-
-##creating global reactive 
-globalreactive<-c()
-for(i in 1:length(ol)){
-  globalreactive[i]<-ol[[i]][4]
-  
-}
-
-##creating voltage
-voltage<-c()
-for(i in 1:length(ol)){
-  voltage[i]<-ol[[i]][1]
-}
-
-##creating energy sub merging
-subm1<-c()
-subm2<-c()
-subm3<-c()
-for(i in 1:length(ol)){
-  subm1[i]<-ol[[i]][7]
-  subm2[i]<-ol[[i]][8]
-  subm3[i]<-ol[[i]][9]
-}
-
-######converting all data into numeric###########
-globalactivepower<-as.numeric(globalactivepower)
-globalreactive<-as.numeric(globalreactive)
-subm1<-as.numeric(subm1)
-subm2<-as.numeric(subm2)
-subm3<-as.numeric(subm3)
-
-
-##################main data#################
-maindata<-data.frame(maindate,time,globalactivepower,globalreactive,voltage,subm1,subm2,subm3)
-
-
-############plotting#########
 par(mfrow=c(2,2))
-with(maindata,plot(time,globalactivepower,xlab="",ylab = "Global active power"))
-with(maindata,plot(time,voltage,xlab="dateandtime",ylab = "Volage"))
-with(maindata,plot(time,subm1,type="n"))
-with(maindata,points(time,subm1))
-with(maindata,points(time,subm2,col="red"))
-with(maindata,points(time,subm3,col="blue"))
-legend("topright",c(sub_metering_1,sub_metering_2,submetering_3),col=c("black","red","blue"),lty = 1,cex = 0.8)
-with(maindata,plot(time,globalreactive,xlab="dateandtime",ylab="Global_active_power"))
+with(maindata,plot(datetime,globalactivepower,xlab = "Global Active Power(kilowatts)",type="l"))
+with(maindata,plot(datetime,voltage,type = "l"))
+with(maindata,plot(datetime,submetering1,type="n",xlab="",ylab="Energy sub metering"))
+with(maindata,points(datetime,submetering1,type ="l"))
+with(maindata,points(datetime,submetering2,type ="l",col="red"))
+with(maindata,points(datetime,submetering3,type ="l",col="blue"))
+legend("topright",c("Sub_metering_1","Sub_metering_2","Sub_metering_3"),col = c("black","red","blue"),lty = 1,cex =0.5)
+with(maindata,plot(datetime,globalreactive,type = "l",ylab = "Global_reactive_power"))
