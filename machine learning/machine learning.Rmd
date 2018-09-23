@@ -1,0 +1,114 @@
+---
+title: " Practile machine learning project"
+author: "Saurabh Yadav"
+
+output: html_document
+---
+
+###Executive summary
+####Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways and we have to predict that way.
+
+
+
+####Required library
+```{r}
+library(caret)
+library(rattle)
+library(randomForest)
+library(rpart)
+```
+
+####Loading the data
+```{r}
+trainingdata<-read.csv("pml-training.csv")
+testingdata<-read.csv("pml-testing (1).csv")
+```
+
+
+
+
+###Cleaning the data first
+```{r}
+
+```
+
+####removing the column having the NAs more than 90% of the colomn data
+```{r}
+colindtraining<-which(colSums(is.na(trainingdata)|trainingdata=="")>0.9*dim(trainingdata)[1])
+colindtesting<-which(colSums(is.na(testingdata)|testingdata=="")>0.9*dim(testingdata)[1])
+cleantraining<-trainingdata[,-colindtraining]
+cleanedtraining<-cleantraining[,-c(1:7)]
+
+#cleaned testing data set
+
+cleantesting<-testingdata[,-colindtesting]
+newtesting<-cleantesting[,-1]
+```
+
+###Dividing the cleanedtraining data set in to training set and test set
+```{r}
+intrain<-createDataPartition(y=cleanedtraining$classe,p=0.7,list = FALSE)
+training<-cleanedtraining[intrain,]
+testing<-cleanedtraining[-intrain,]
+
+```
+
+###Fitting the model
+####1. Fitting the tree model
+```{r}
+modfittree<-rpart(classe~.,data=training,method = "class")
+```
+
+####2. Plotting the tree
+```{r}
+fancyRpartPlot(modfittree)
+```
+####3. predicting with tree
+```{r}
+pred<-predict(modfittree,testing,type = "class")
+```
+
+####4.Checking the accuracy
+
+```{r}
+confusionMatrix(pred,testing$classe)
+```
+
+###Conclusion: The accuracy is only 73% which is not that good. So we need another model to predict.
+
+###Creating model with random forest
+
+```{r}
+modfitrf<-randomForest(classe~.,data=training)
+
+```
+
+####1.predicting with random forest
+
+```{r}
+p<-predict(modfitrf,testing)
+```
+
+####2. checking the accuracy
+```{r}
+confusionMatrix(p,testing$classe)
+```
+
+##Conclusion : The random forest model has the best accuracy which is 99.92%. So this would be the model to predit.
+
+
+###Model error of random forest model
+```{r}
+plot(modfitrf,main="Model error of random forest model by number of tree")
+```
+
+
+### Applying the model for final prediction on the test data set
+```{r}
+predict(modfitrf,newtesting)
+```
+
+
+
+
+
