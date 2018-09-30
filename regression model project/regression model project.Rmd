@@ -1,0 +1,148 @@
+---
+title: "Fuel efficiency analysis"
+author: "Saurabh Yadav"
+---
+
+
+
+##Executive summary
+#####In this we assume that we work for a motor trend magazine and we have to look at the dataset of the mtcars and explore the relationship between the few variables and the mpg variable. In this we have to specially give the answers for the following questions
+#####1."Is an automatic or manual transmission better for MPG"
+#####2."Quantify the MPG difference between automatic and manual transmissions"
+
+#####In our analysis we have shown that the manual transmission is better for lighter weight and less displacements.
+
+#####Loading the data
+```{r,echo=FALSE}
+options(warn = -1)
+
+data(mtcars)
+
+library(ggplot2)
+
+
+library(dplyr)
+
+
+```
+##### Adding a colomun to identify the auto and manual transmission.
+```{r}
+mtcars$mode<-ifelse(mtcars$am==0,"automatic","manual")
+
+```
+
+
+##Exploratory analysis
+
+####1. First taking the simply mean of the mpg of transmissions
+
+
+```{r}
+sumry<-group_by(mtcars,mode)
+meandata<-summarise(sumry,mean(mpg))
+meandata<-data.frame(meandata)
+colnames(meandata)<-c("mode","mean")
+meandata
+```
+
+
+### Conclusion from the exploratory analysis
+
+####1. By taking the mean we can analyse that the manual transmission is better that the automatic. But to be sure we have to do some regression analysis to check if the manual is always better or it depends on some factors of the data.
+
+#Regerssion analysis
+
+### T test for the variable mpg
+```{r}
+t.test(mtcars$mpg[mtcars$am==0],mtcars$mpg[mtcars$am==1],paired = FALSE)
+```
+####Conclusion: The confidence intervel clearly shows that mpg for manual transmission is better than the automamtic because the intervel is negative.
+
+##Fitting the different models
+
+###1.Fitting the model considering all the variables
+```{r}
+
+fit1<-lm(mpg~.,data = mtcars)
+fit1
+```
+
+####Conclusion: The model including all the variables does not show a good estimation for transmission. So we are including the differnt variables with interaction factor am(0=automatic,1=manual).
+
+###2. Fitting the model considering the wt variable
+
+```{r}
+fit2<-lm(mpg~wt*factor(mode),data = mtcars)
+fit2$coefficients
+
+```
+#### Conclusion:
+#####1. For automatic transmission the intercept is 31.4161 and for every 1000 lbs increase there is 3.7859 mpg decrease. 
+#####2. For manual transmission the intercept is 46.28 an for for every 1000 lbs increase there is 9.07 mpg decrease  mpg.
+#####3. But according to Plot 2 in the appendix the manual transmission is better for the light weight cars.
+
+####3. Fitting the model considering the disp variable
+
+```{r}
+fit3<-lm(mpg~disp*factor(mode),data = mtcars)
+fit3$coefficients
+```
+
+####Conclusion:
+
+#####1. The intercept is 25.1570 for automatic transmission and for increase in displacement the decrease in  mpg is 0.027584 and for manual transmission the intercept is 32.85 and for each increase in mpg the decrease is 0.059039. 
+
+#####2. But according to the plot 3 in appendix the manual transmission gives higher mpg for the displacement less than 245 (cu.in.)
+
+####4. Fitting the model considering the hp variable
+
+```{r}
+fit4<-lm(mpg~hp*factor(mode),data = mtcars)
+fit4$coefficients
+```
+
+####Conclusion: 
+
+#####1. For automatic transmission the intercept is 26.62 and for each increase in horsepower there is 0.0591 decrease in mpg.
+
+#####2. For manual transmission the intercept is 31.83 and for each increase in horsepower there is .058 decrease in mpg.
+
+#####3.So the mannual transmission is better when we include the hp variable.
+
+
+####5. Fitting the model considering the cyl variable
+```{r}
+fit5<-lm(mpg~cyl*factor(mode),data = mtcars)
+fit5$coefficients
+```
+
+####Conclusion: For auto transmission there is 1.9757 decrease in mpg when cylinder increases and manual transmission there is 2.28 decrease in mpg when cylinder increases. So the manual transmission is better.
+
+
+
+
+#Appendix
+
+
+
+####Plot 1 (fitting the model with variable wt)
+```{r}
+ggplot(data = mtcars,aes(x=wt,y=mpg,color=mode))+geom_point(size=4)+geom_abline(slope = -3.786,intercept = 31.416,color="salmon",size=1)+geom_abline(slope = -9.08,intercept = 46.28,color="skyblue",size=1)
+```
+
+
+####Plot 2 (fitting the model with variable disp)
+```{r}
+par(mfrow = c(2, 2))
+ggplot(data = mtcars,aes(x=disp,y=mpg,color=mode))+geom_point(size=4)+geom_abline(slope = -0.027584,intercept =25.157,color="salmon")+geom_abline(slope = -0.0590,intercept = 32.85,color="skyblue",size=1)
+
+```
+
+
+
+
+####Plot 3 (Residuals and diagnostics)
+```{r}
+par(mfrow = c(2, 2))
+plot(fit1)
+```
